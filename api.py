@@ -1,5 +1,6 @@
 from pathlib import Path
 import logging
+import os
 
 import falcon
 import youtube_dl
@@ -8,6 +9,7 @@ import youtube_dl
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
+base_path = os.getenv("BASE_PATH", "cache/audio")
 
 def check_ffmpeg_libav():
     import shutil
@@ -29,7 +31,7 @@ YTDL_OPTS = dict(
     quiet=True,
     default_search="auto",
     noplaylist=True,
-    outtmpl="cache/audio/%(id)s",
+    outtmpl=f"{base_path}/%(id)s",
     postprocessors=[dict(key="FFmpegExtractAudio", preferredcodec="opus")],
 )
 
@@ -113,7 +115,7 @@ class V1Enqueue:
         with youtube_dl.YoutubeDL(YTDL_OPTS) as ytdl:
             info = ytdl.extract_info(url, download=False)
 
-        audio_file_path = Path("./cache/audio") / f"{info['id']}.opus"
+        audio_file_path = Path(base_path) / f"{info['id']}.opus"
 
         if audio_file_path.exists():
             log.info(f"skipping download as {audio_file_path} already exists.")
